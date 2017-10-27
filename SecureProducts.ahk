@@ -1,19 +1,15 @@
 /*
-HOWTO:
+	copy and paste this code on the beginning of your code:
 	
-1.	Die SecureProducts1.0.ahk ausfindig machen und Pfad kopieren
+	#include, C:\YOUR_PATH\SecureProducts1.0.ahk
+	return
 	
-2.	Am Anfang diesen Code einfügen:
-	
-	#include, e:\Installer\Intel System 14.07\Backup\Autohotkey Projects\Source\SECURE PRODUCTS\SecureProducts1.0.ahk
-	initialize()
+	initialize() ;will be called when license is valid
 	{
 		FileAppend, `nLicense valid, SP.log
-		;restliche "initialisierungs-Funktionen"
+		;copy and paste everything left from your auto execute
 	}
   
-	Diese Funktion wird als "Auslöser" der erfolgreichen Validierung aufgerufen 
-	und steht für den eigentlichen Start des zu schützenden Programms.
 */
 
 
@@ -24,24 +20,17 @@ SetBatchLines -1
 ListLines Off
 SetWorkingDir, %A_ScriptDir%
 
-Licensepw:="Pp86TpTMmJaY2ssFLLq74RMHAfqDMN6LSMVdBFpjCewrZXvJRcf2RS4a2nWBfExZ"
-PPIDpw:="VuQLHKtZKfRBk7jKVufQEvJDdWwwShbxYg2gX3vaD6ZJQzkdLv9PMBQNCszDc6hY"
-
-
 checklicense()
-;initialize()
 return
 
-checklicense()
-{
+checklicense() {
 	global
 	
 	;MsgBox, 4160, -Secure Products-  by Peter Holz, Booting...`n`nmade by Peter Holz., 0.3
 	Gui, destroy
 	;Gui, Add, Progress, x32 y39 w270 h30 vloading
 	
-	Gui, Add, Text, x2 y14 w260 h20 +Center vloadingtext, Smurf Master is loading
-	; Generated using SmartGUI Creator for SciTE	
+	Gui, Add, Text, x2 y14 w260 h20 +Center vloadingtext, %programname% is loading
 	Gui, Show, w266 h44, Secure Products 1.3
 	
 	settimer, pro, 500
@@ -50,7 +39,7 @@ checklicense()
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;Die Computer-spezifische Mac-Adresse auslesen
 	RunWait, %comspec% /c ipconfig /all > %A_Temp%\demo.tmp, , hide
-	Loop, Read, %A_Temp%\demo.tmp
+	Loop, Read, %A_Temp%\demo.tmp 
 	{
 		IfInString, A_LoopReadLine, Physi ;MAC sicherstellen!!!
 		{
@@ -58,10 +47,8 @@ checklicense()
 			StringRight, PPID, PPID, 18 ;müll abschneiden
 			StringLeft, ersteStelle, PPID, 1
 			Transform, Code, Asc, %ersteStelle%
-			if (Code = 32)
-			{
+			if Code = 32
 				StringRight, PPID, PPID, StrLen(PPID)-1
-			}
 			break
 		}
 	}
@@ -69,35 +56,29 @@ checklicense()
 	FileDelete, %A_Temp%\demo.tmp
 	
 	;bei zu kurzer Mac-Adresse wird das Programm beendet
-	if (StrLen(PPID) < 17)
-	{  
-		MsgBox, 262160, Fatal Error , ERROR 17 17 contact: peter.holz@hotmail.de
+	if (StrLen(PPID) < 17) {  
+		MsgBox, 262160, Fatal Error , ERROR 17 contact: peter.holz@hotmail.de
 		return
 	}
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	;Wenn das Programm das erste mal gestartet wird, wird eine neue Konfigurationsdatei erstellt
-	IfNotExist, smurf.ini
-	{
+	if !FileExist(programininame) {
 		verifyfailure(1,0)
 		return
 	}
 	
-
 	;Bei Existenz werden die Werte ausgelesen...
 	
-	IniRead, License, smurf.ini, License, License
+	IniRead, License, %programininame% , License, License
 	
-	if (License="blyat")
-	{
+	if (License = "blyat") {
 		initialize()
 		return
 	}
 	
 	;------Überprüfungsfunktion------
 	
-	if (License=0 or strlen(License)<1)
-	{
+	if (License=0 or strlen(License)<1) {
 		verifyfailure(0,0)
 		return
 	}
@@ -110,7 +91,7 @@ checklicense()
 	
 	time=%a_dd%/%a_mm%/%a_yyyy% %a_hour%:%a_min%:%a_sec%
 	diff := A_TickCount-f
-	FileAppend,% "`n" . time . " - license decrypted after " .  diff . "ms", smurf.log
+	FileAppend,% "`n" . time . " - license decrypted after " .  diff . "ms", %programlogname%
 
 	settimer, brockenencrypt, off
 	
@@ -160,11 +141,12 @@ checklicense()
 	Avalue3 := HexToUShort(Avalue3)
 	Avalue4 := HexToUShort(Avalue4)
 	Avalue5 := HexToUShort(Avalue5)
-	Avalue6 := HexToUShort(Avalue6)
+	Avalue6 := HexToUShort(Avalue6) ;loop mit A_index
 
 
 	;A und B Werte vergleichen
 	;Wenn die Addition der A und B Werte das richtige Ergebnis liefern, wird die Kontrollvariabel mit verschiedenen Operationen behandelt
+	;Diese konfiguration von Vergleichen ist natürlich individuell verstellbar
 	if ((Avalue1+Bvalue1)=152)
 		Counter += 7
 	if ((Avalue2+Bvalue2)=236)
@@ -181,22 +163,20 @@ checklicense()
 	
 	;Wenn alle Additionen korrekt waren wird diese if-Anweisung übersprungen und man erhält die Nachricht für die korrekte Lizenz
 	;Wenn nicht der richtige Schlüssel verwendet wurde wird die Mac Adresse neu in die Konfigurations-Datei geschrieben und eine Fehlermeldung ausgesandt.
-	if (Counter!=6459)
-	{
+	if (Counter!=6459) {
 		verifyfailure(0,1)
 		return
 	}
 
-	;MsgBox, 262208, , Lizenz korrekt!`n`nmade by PETER HOLZ`ncontact: peter.holz@hotmail.de, 1
 	;time=%a_dd%/%a_mm%/%a_yyyy% %a_hour%:%a_min%:%a_sec%
-	;FileAppend,% "`n" . time . " - License valid" , smurf.log
+	;FileAppend,% "`n" . time . " - License valid" , %programlogname%.log
 	if Buttonverify=1
 		MsgBox, 262208, , License correct!`n`nmade by PETER HOLZ`ncontact: peter.holz@hotmail.de, 5
+	
 	initialize()
 }
 
-verifyfailure(one,type)
-{
+verifyfailure(one,type) {
 	global
 	
 	PPID := StrEncrypt(PPID,PPIDpw,3000)
@@ -206,11 +186,10 @@ verifyfailure(one,type)
 	
 	time=%a_dd%/%a_mm%/%a_yyyy% %a_hour%:%a_min%:%a_sec%
 	
-	if (one=1)
-	{
-		FileAppend,% "`n" . time . " - writeini" , smurf.log
+	if (one=1) {
+		FileAppend,% "`n" . time . " - writeini" , %programlogname%
 		e:=""
-		IniWrite, %e%, smurf.ini, License, License
+		IniWrite, %e%, %programininame% , License, License
 	}
 	
 	settimer, pro, off
@@ -219,62 +198,59 @@ verifyfailure(one,type)
 	Gui, Add, Text, x22 y19 w90 h30 , Personal ID Code (PPID)
 	Gui, Add, Button, x212 y89 w170 h30 , verify
 	Gui, Add, Text, x22 y59 w90 h20 , License
-	Gui, Add, Text, x142 y129 w330 h75 , How to get License:`n`na: Ask TF | CryAndDie with the PPID in your pocket for a License.`nb: Write an email with you PPID to peter.holz@hotmail.de
-	Gui, Show, w508 h215, License for Smurf Master
+	Gui, Add, Text, x142 y129 w330 h75 , Write an email to peter.holz@hotmail.de to get a license (dont forget you PPID) 
+	Gui, Show, w508 h215, License for %programname%
 	
-	
-	
-	if (type=0) ;keine License.ini
-	{
-		FileAppend,% "`n" . time . " - Error0" , smurf.log
-		MsgBox, 262160, Aktivierung, Bitte kontaktieren sie den Entwickler unter:`n`n peter.holz@hotmail.de oder TF | CryAndDie `n`num eine gültige Lizenz für ihren Computer zu erhalten.`n(Badkey0)
+	if (type=0) { ;no .ini
+		FileAppend,% "`n" . time . " - Error0" , %programininame%
+		MsgBox, 262160, Activation, Write an email to peter.holz@hotmail.de to get a license (dont forget you PPID) `n(Badkey0)
 	}
-	if (type=1) ;falscher Key
-	{
-		FileAppend,% "`n" . time . " - Error1" , smurf.log
-		MsgBox, 262160, Aktivierung, Bitte kontaktieren sie den Entwickler unter:`n`n peter.holz@hotmail.de oder TF | CryAndDie `n`num eine gültige Lizenz für ihren Computer zu erhalten.`n(Badkey1) 
+	if (type=1) { ;falscher Key
+		FileAppend,% "`n" . time . " - Error1" , %programininame%
+		MsgBox, 262160, Activation, Write an email to peter.holz@hotmail.de to get a license (dont forget you PPID) `n(Badkey1) 
 	}
-	if (type=2) ;unvollständige License bzw. nicht entschlüsselbar
-	{
-		FileAppend,% "`n" . time . " - Error2" , smurf.log
-		MsgBox, 262160, Aktivierung, Bitte kontaktieren sie den Entwickler unter:`n`npeter.holz@hotmail.de oder TF | CryAndDie `n`num eine gültige Lizenz für ihren Computer zu erhalten.`n(Badkey2) ; altes "zu lange"
+	if (type=2) { ;unvollständige License bzw. nicht entschlüsselbar
+		FileAppend,% "`n" . time . " - Error2" , %programininame%
+		MsgBox, 262160, Activation, Bitte kontaktieren sie den Entwickler unter:`n`npeter.holz@hotmail.de oder TF | CryAndDie `n`num eine gültige Lizenz für ihren Computer zu erhalten.`n(Badkey2) ; altes "zu lange"
 	}
 }
 
 Buttonverify:
-gui,submit
-IniWrite, %Li%, smurf.ini, License, License
-Buttonverify:=1
-checklicense()
+
+	gui,submit
+	IniWrite, %Li%, %programininame%, License, License
+	Buttonverify:=1
+	checklicense()
 return
 
 brockenencrypt:
-verifyfailure(1,2)
+
+	verifyfailure(1,2)
 return
 
 pro:
-if pro=0
-{
-	guicontrol,,loadingtext, Smurf Master is loading .
-	pro:=1
-}
-else if pro=1
-{
-	guicontrol,,loadingtext, Smurf Master is loading ..
-	pro:=2
-}
-else if pro=2
-{
-	guicontrol,,loadingtext, Smurf Master is loading ...
-	pro:=0
-}
+
+	if (pro=0) {
+		guicontrol,,loadingtext, %programname% is loading .
+		pro:=1
+	}
+	else if (pro=1) {
+		guicontrol,,loadingtext, %programname% is loading ..
+		pro:=2
+	}
+	else if (pro=2) {
+		guicontrol,,loadingtext, %programname% is loading ...
+		pro:=0
+	}
 return
 
 /*
 *
 *
 *
--------------Ab hier alle verschlüsselungs-funtionen-------------
+-------------decryption functions-------------
+credits to nnnik 
+source: https://autohotkey.com/board/topic/91439-stringencrypt-decrypt-by-nnnik/
 *
 *
 */
@@ -334,12 +310,8 @@ Strarr:=strarr.Clone()
 PwArr:=Pwarr.Clone()
 Quality:=strarr[strarr.maxindex()]
 strarr.remove()
-;p := 100//(Quality+1)
-;msgbox % p
 Loop % Quality+1
 {
-	;sleep 1
-	;GuiControl,, loading, +%p%
 PWArr:=Filter1(PWArr,0,modvar)
 PWArr:=Filter2(PWarr,0)
 bufarr.insert(Calcbuf(PWarr,modvar))
